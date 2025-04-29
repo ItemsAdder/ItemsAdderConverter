@@ -15,5 +15,9 @@ public final class Main extends JavaPlugin
     public void onEnable()
     {
         instance = this;
+
+        AbstractConverter.createFolders();
+
+        new Command().register();
     }
 }
