@@ -1,0 +1,13 @@
+name: ItemsAdderConverter
+version: '1.0.0'
+main: com.itemsadder.converter.Main
+api-version: '1.21'
+prefix: ItemsAdderConverter
+authors: [ LoneDev ]
+description: Convert configurations of other plugins to ItemsAdder
+website: itemsadder.com
+commands:
+  iaconvert:
+    description: Convert configurations of another plugin.
+    usage: /<command> [folder]
+    permission: "ia.admin.iaconvert"
