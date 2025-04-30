@@ -1,6 +1,7 @@
 package com.itemsadder.converter;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,9 +15,14 @@ public class Mapping
     private final String baseSection;
     private final List<Rule> customRules = new ArrayList<>();
 
-    public Mapping(String baseSection)
+    public Mapping(@Nullable String baseSection)
     {
         this.baseSection = baseSection;
+    }
+
+    public static Mapping create()
+    {
+        return create(null);
     }
 
     public static Mapping create(String baseSection)
@@ -41,7 +47,7 @@ public class Mapping
 
     public void apply(ConfigurationSection source, ConfigurationSection dest)
     {
-        ConfigurationSection baseSource = source.getConfigurationSection(baseSection);
+        ConfigurationSection baseSource = baseSection != null ? source.getConfigurationSection(baseSection) : source;
         if (baseSource == null) return;
 
         for (String key : baseSource.getKeys(false))

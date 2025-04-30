@@ -35,72 +35,81 @@ public class NexoConverter extends AbstractConverter
     @Override
     public void convert()
     {
-        File[] files = sourceFolder.listFiles((dir, name) -> name.endsWith(".yml"));
-        if (files == null)
-            return;
-
-        for (File file : files)
+        File itemsFolder = new File(sourceFolder, "items");
+        if (itemsFolder.exists())
         {
-            FileConfiguration sourceConfig = YamlConfiguration.loadConfiguration(file);
-            FileConfiguration outputConfig = new YamlConfiguration();
+            File[] itemsFiles = itemsFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+            if (itemsFiles == null)
+                return;
 
-            if(sourceConfig.contains("items"))
+            for (File file : itemsFiles)
             {
+                FileConfiguration sourceConfig = YamlConfiguration.loadConfiguration(file);
+                FileConfiguration outputConfig = new YamlConfiguration();
+
                 convertItems(file, sourceConfig, outputConfig);
-            }
 
-            // TODO test if the models actually convert correctly or if I have to dynamically fix the namespaces inside the
-            //  models json files themselves.
-
-            // TODO recipes
-            // TODO armors
-            // TODO glyphs
-            // TODO create the /ia menu entries for the items.
-
-            // TODO: iterate the items, find furniture mechanic, convert loot into separate ItemsAdder loot section.
+                // TODO recipes.
+                //  "Recipes can be created directly in the relevant file within the `Nexo/recipes` directory"
+                //  https://docs.nexomc.com/general-usage/recipes
 
 
-            // TODO light mechanic (block)
+                // TODO test if the models actually convert correctly or if I have to dynamically fix the namespaces inside the
+                //  models json files themselves.
 
-            // TODO farming mechanic. (once it also will be implemented into itemsadder itself).
-            // TODO bed mechanic. (once it also will be implemented into itemsadder itself).
+                // TODO armors
+                // TODO glyphs
+                // TODO create the /ia menu entries for the items.
 
-            // TODO other various Nexo mechanics
-            //  https://docs.nexomc.com/mechanics/all-mechanics
+                // TODO: iterate the items, find furniture mechanic, convert loot into separate ItemsAdder loot section.
 
-            // TODO: convert sounds to the json variant.
 
-            // TODO: custom blocks
-            //   - log_strip mechanic. ItemsAdder can do that with events and replace block.
-            //     https://docs.nexomc.com/mechanics/custom-block-mechanics/noteblock-mechanic/stripped-log-mechanic
-            //   - directional blocks. ItemsAdder handles them in a different and more optimal way: https://itemsadder.devs.beer/plugin-usage/adding-content/advanced-block-properties/directional-blocks
-            //     https://docs.nexomc.com/mechanics/custom-block-mechanics/noteblock-mechanic/directional-mechanic
+                // TODO light mechanic (block)
 
-            outputConfig.set("info.namespace", "nexo");
-            outputConfig.set("info.converted_from", "nexo");
+                // TODO farming mechanic. (once it also will be implemented into itemsadder itself).
+                // TODO bed mechanic. (once it also will be implemented into itemsadder itself).
 
-            try
-            {
-                File outputFolder = new File(Main.inst().getDataFolder(), "contents" + File.separator + folderName);
-                if (!outputFolder.exists())
+                // TODO other various Nexo mechanics
+                //  https://docs.nexomc.com/mechanics/all-mechanics
+
+                // TODO: convert sounds to the json variant.
+
+                // TODO: custom blocks
+                //   - log_strip mechanic. ItemsAdder can do that with events and replace block.
+                //     https://docs.nexomc.com/mechanics/custom-block-mechanics/noteblock-mechanic/stripped-log-mechanic
+                //   - directional blocks. ItemsAdder handles them in a different and more optimal way: https://itemsadder.devs.beer/plugin-usage/adding-content/advanced-block-properties/directional-blocks
+                //     https://docs.nexomc.com/mechanics/custom-block-mechanics/noteblock-mechanic/directional-mechanic
+
+                outputConfig.set("info.namespace", "nexo");
+                outputConfig.set("info.converted_from", "nexo");
+
+                try
                 {
-                    //noinspection ResultOfMethodCallIgnored
-                    outputFolder.mkdirs();
+                    File outputFolder = new File(Main.inst().getDataFolder(), "contents" + File.separator + folderName);
+                    if (!outputFolder.exists())
+                    {
+                        //noinspection ResultOfMethodCallIgnored
+                        outputFolder.mkdirs();
+                    }
+                    outputConfig.save(new File(outputFolder, "converted_itemsadder.yml"));
                 }
-                outputConfig.save(new File(outputFolder, "converted_itemsadder.yml"));
+                catch (IOException e)
+                {
+                    Main.inst().getLogger().warning("Failed to save converted file: " + file.getName());
+                    e.printStackTrace();
+                }
             }
-            catch (IOException e)
-            {
-                Main.inst().getLogger().warning("Failed to save converted file: " + file.getName());
-                e.printStackTrace();
-            }
+        }
+        else
+        {
+            Main.inst().getLogger().warning("No 'items' folder found in " + sourceFolder.getPath() + ". Skipping conversion.");
         }
     }
 
     @Override
     protected void convertItems(File file, FileConfiguration config, FileConfiguration outputConfig)
     {
-        Mapping mapping = Mapping.create("items")
+        Mapping mapping = Mapping.create()
                 .mapFirst(List.of("customname", "displayname", "itemname")).to("name").end()
                 .map("lore").to("lore").end()
                 .map("permission").to("permission_suffix").end()
@@ -856,7 +865,7 @@ public class NexoConverter extends AbstractConverter
                 })
                 ;
 
-        mapping.apply(config, outputConfig);
+        mapping.apply(config, outputConfig.createSection("items"));
     }
 
     private static int getMaxLightLevel(List<String> lights)
