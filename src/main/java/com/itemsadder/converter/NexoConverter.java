@@ -9,23 +9,17 @@ import java.io.IOException;
 import java.util.*;
 
 // https://docs.nexomc.com/
+@Deprecated // TODO: needs testing and refactoring, for now I will concentrate on Oraxen instead.
 public class NexoConverter extends AbstractConverter
 {
     private final File sourceFolder;
     private final String folderName;
 
-    public NexoConverter(String folderName) throws IllegalArgumentException
+    public NexoConverter(String folderName, boolean toIaContents) throws IllegalArgumentException
     {
         this.folderName = folderName;
 
-        File convertFolderBase = new File("convert" + File.separator + "nexo");
-        if (!convertFolderBase.exists())
-        {
-            //noinspection ResultOfMethodCallIgnored
-            convertFolderBase.mkdirs();
-        }
-
-        this.sourceFolder = new File(Main.inst().getDataFolder(), new File(convertFolderBase, folderName).getPath());
+        this.sourceFolder = new File(Main.inst().getDataFolder(), new File("convert", folderName).getPath());
         if (!sourceFolder.exists())
         {
             throw new IllegalArgumentException("Folder " + folderName + " does not exist in the converter directory.");
@@ -47,6 +41,9 @@ public class NexoConverter extends AbstractConverter
                 FileConfiguration sourceConfig = YamlConfiguration.loadConfiguration(file);
                 FileConfiguration outputConfig = new YamlConfiguration();
 
+                outputConfig.set("info.namespace", "nexo");
+                outputConfig.set("info.converted_from", "nexo");
+
                 convertItems(file, sourceConfig, outputConfig);
 
                 // TODO recipes.
@@ -63,8 +60,11 @@ public class NexoConverter extends AbstractConverter
 
                 // TODO: iterate the items, find furniture mechanic, convert loot into separate ItemsAdder loot section.
 
-
                 // TODO light mechanic (block)
+
+                // TODO: bows, crossbows, tridents, fishing rods, shields, and other items with special mechanics.
+
+                // TODO: bows, crossbows, tridents, fishing rods, shields, and other items with special mechanics.
 
                 // TODO farming mechanic. (once it also will be implemented into itemsadder itself).
                 // TODO bed mechanic. (once it also will be implemented into itemsadder itself).
@@ -80,12 +80,9 @@ public class NexoConverter extends AbstractConverter
                 //   - directional blocks. ItemsAdder handles them in a different and more optimal way: https://itemsadder.devs.beer/plugin-usage/adding-content/advanced-block-properties/directional-blocks
                 //     https://docs.nexomc.com/mechanics/custom-block-mechanics/noteblock-mechanic/directional-mechanic
 
-                outputConfig.set("info.namespace", "nexo");
-                outputConfig.set("info.converted_from", "nexo");
-
                 try
                 {
-                    File outputFolder = new File(Main.inst().getDataFolder(), "contents" + File.separator + folderName);
+                    File outputFolder = new File(Main.inst().getDataFolder(), "converted" + File.separator + folderName);
                     if (!outputFolder.exists())
                     {
                         //noinspection ResultOfMethodCallIgnored
@@ -276,14 +273,14 @@ public class NexoConverter extends AbstractConverter
                     // model_path
                     if (pack.contains("model_path"))
                     {
-                        resource.set("generate", true);
+                        resource.set("generate", false);
                         resource.set("model_path", pack.getString("model_path"));
                         if (pack.contains("parent_model"))
                             resource.set("parent", pack.getString("parent_model"));
                     }
                     else
                     {
-                        resource.set("generate", false);
+                        resource.set("generate", true);
                     }
 
                     // texture (basic)
@@ -463,16 +460,8 @@ public class NexoConverter extends AbstractConverter
                     }
 
                     // type/entity
-                    String type = source.getString("type");
-                    if (type != null)
-                    {
-                        switch (type.toLowerCase())
-                        {
-                            case "display_entity", "item_display" -> furniture.set("entity", "item_display");
-                            case "armor_stand" -> furniture.set("entity", "armor_stand");
-                            case "item_frame" -> furniture.set("entity", "item_frame");
-                        }
-                    }
+                    // Nexo only supports item_display entities.
+                    furniture.set("entity", "item_display");
 
                     // Oraxen legacy shit
                     if (source.contains("display_entity_properties.display_transform"))

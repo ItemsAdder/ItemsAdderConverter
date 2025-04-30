@@ -23,7 +23,7 @@ public abstract class AbstractConverter
     {
         List<String> folders = new ArrayList<>();
 
-        File convertFolderBase = new File("convert");
+        File convertFolderBase = new File(Main.inst().getDataFolder(), "convert");
         if (!convertFolderBase.exists())
             return folders;
 
@@ -42,7 +42,7 @@ public abstract class AbstractConverter
             for (File entry : entries)
             {
                 completeStr += "/" + entry.getName();
-                if (entry.isDirectory() && completeStr.contains(partialName))
+                if (entry.isDirectory() && (partialName == null || partialName.isEmpty() || completeStr.contains(partialName)))
                 {
                     folders.add(completeStr);
                 }
@@ -55,7 +55,7 @@ public abstract class AbstractConverter
     {
         TYPES_FOLDERS.forEach(typeFolderName ->
         {
-            File folder = new File(Main.inst().getDataFolder(), typeFolderName);
+            File folder = new File(Main.inst().getDataFolder(), "convert" + File.separator + typeFolderName);
             if (!folder.exists())
                 folder.mkdirs();
         });
